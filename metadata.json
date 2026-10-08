@@ -1,0 +1,6 @@
+{
+  "name": "AhtiMail Control Panel & Enterprise Webmail Suite",
+  "description": "Enterprise Webmail and Identity Provisioning Control Panel for generating business email accounts, managing company domains, and connecting to Slack, Outlook, Zoom, and Teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
