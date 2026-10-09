@@ -17,6 +17,7 @@ interface IntegrationCenterProps {
   mailboxes: Mailbox[];
   onSimulateServiceEmail: (email: string, service: ServiceType) => void;
   onOpenWebmail: (email: string) => void;
+  onOpenSlackSandbox?: () => void;
   preselectedEmail?: string;
 }
 
@@ -24,6 +25,7 @@ export const IntegrationCenter: React.FC<IntegrationCenterProps> = ({
   mailboxes,
   onSimulateServiceEmail,
   onOpenWebmail,
+  onOpenSlackSandbox,
   preselectedEmail,
 }) => {
   const [targetEmail, setTargetEmail] = useState<string>(
@@ -208,6 +210,56 @@ export const IntegrationCenter: React.FC<IntegrationCenterProps> = ({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Slack OTP Explanation & Sandbox Banner */}
+      <div className="bg-gradient-to-r from-purple-950/40 via-slate-900 to-indigo-950/40 border border-purple-900/60 rounded-xl p-5 shadow-lg space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#4A154B] flex items-center justify-center text-white font-black text-base shadow-md">
+              S
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-sm">
+                Slack OTP Login Verification & Troubleshooting
+              </h3>
+              <p className="text-xs text-purple-300">
+                Slack par "That code wasn't valid. Have another go!" error kyu aata hai aur isay kaise test karein?
+              </p>
+            </div>
+          </div>
+
+          {onOpenSlackSandbox && (
+            <button
+              onClick={onOpenSlackSandbox}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4A154B] hover:bg-[#611f69] text-white rounded-lg text-xs font-bold transition-colors whitespace-nowrap shadow-md"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Open Slack Sandbox Test</span>
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-purple-900/40 text-xs">
+          <div className="bg-slate-950/80 p-3 rounded-lg border border-purple-900/40 space-y-1">
+            <strong className="text-amber-400 font-semibold block">
+              1. Real Slack (slack.com) par error ki wajah:
+            </strong>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              Jab aap <strong>slack.com</strong> par email (e.g. <code>ahtisham12@axxonbpo.com</code>) daalte hain, toh Slack apne servers se ek asli secret OTP bhejta hai. Agar aapne simulator ka banaya hua number real Slack mein enter kiya, toh Slack usay reject karega kyunki Slack ko hamara demo number nahi pata hota.
+            </p>
+          </div>
+
+          <div className="bg-slate-950/80 p-3 rounded-lg border border-purple-900/40 space-y-1">
+            <strong className="text-emerald-400 font-semibold block">
+              2. Iska Hal (Solution):
+            </strong>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              • <strong>Interactive Demo ke liye:</strong> Upar diye gaye <strong>"Open Slack Sandbox Test"</strong> button par click karein. Yeh exact Slack ka screen kholta hai aur code verify kar ke Slack workspace mein successfully login kar deta hai!<br/>
+              • <strong>Real Slack ke liye:</strong> Apne real domain (axxonbpo.com) ke cPanel ya Google Workspace inbox se woh OTP lein jo Slack ne asal mein send kiya hai.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Services Setup Cards */}

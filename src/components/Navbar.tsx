@@ -13,6 +13,7 @@ interface NavbarProps {
   activeMailboxEmail: string;
   onSelectMailbox: (email: string) => void;
   onOpenSimulator: () => void;
+  onOpenSlackSandbox?: () => void;
   onLogout: () => void;
 }
 
@@ -27,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeMailboxEmail,
   onSelectMailbox,
   onOpenSimulator,
+  onOpenSlackSandbox,
   onLogout,
 }) => {
   return (
@@ -92,6 +94,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Bar */}
           <div className="flex items-center gap-3">
+            {/* Slack Login Sandbox Trigger */}
+            {onOpenSlackSandbox && (
+              <button
+                onClick={onOpenSlackSandbox}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-purple-300 bg-purple-950/70 hover:bg-purple-900/70 border border-purple-700/60 rounded-md transition-colors"
+                title="Open interactive Slack OTP login sandbox"
+              >
+                <div className="w-3.5 h-3.5 rounded bg-[#4A154B] flex items-center justify-center text-[9px] font-bold text-white">
+                  S
+                </div>
+                <span>Slack Sandbox</span>
+              </button>
+            )}
+
             {/* Quick OTP Simulator Trigger */}
             <button
               onClick={onOpenSimulator}

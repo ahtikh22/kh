@@ -10,6 +10,7 @@ import { CreateCompanyModal } from './components/AdminPanel/CreateCompanyModal';
 import { CompanyDashboard } from './components/CompanyPortal/CompanyDashboard';
 import { WebmailView } from './components/Webmail/WebmailView';
 import { LoginModal } from './components/LoginModal';
+import { SlackSandboxModal } from './components/SlackSandboxModal';
 import { StorageService, ADMIN_CREDENTIALS } from './services/storage';
 import { AppViewMode, Company, Mailbox, EmailMessage, ActivityLog, ServiceType } from './types';
 import {
@@ -57,6 +58,7 @@ export default function App() {
   const [isBulkCreateOpen, setIsBulkCreateOpen] = useState(false);
   const [isCreateCompanyOpen, setIsCreateCompanyOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSlackSandboxOpen, setIsSlackSandboxOpen] = useState(false);
   const [simulatorEmailTarget, setSimulatorEmailTarget] = useState<string>('');
 
   // Toast banner for feedback
@@ -146,6 +148,13 @@ export default function App() {
     showToast(`Simulated ${service.toUpperCase()} OTP verification delivered to ${toEmail}`);
   };
 
+  const handleGenerateSlackOtp = (email: string): string => {
+    const newMail = StorageService.simulateServiceVerificationEmail(email, 'slack');
+    refreshAllState();
+    showToast(`Delivered Slack OTP (${newMail.otpCode}) to ${email}`);
+    return newMail.otpCode || '482910';
+  };
+
   const handleToggleStar = (emailId: string) => {
     StorageService.toggleStarEmail(emailId);
     refreshAllState();
@@ -224,6 +233,7 @@ export default function App() {
           setAdminSubTab('integrations');
           setCurrentMode('admin');
         }}
+        onOpenSlackSandbox={() => setIsSlackSandboxOpen(true)}
         onLogout={() => setIsLoginModalOpen(true)}
       />
 
@@ -341,6 +351,7 @@ export default function App() {
                 mailboxes={mailboxes}
                 onSimulateServiceEmail={handleSimulateServiceEmail}
                 onOpenWebmail={handleOpenWebmailForEmail}
+                onOpenSlackSandbox={() => setIsSlackSandboxOpen(true)}
                 preselectedEmail={simulatorEmailTarget}
               />
             )}
@@ -435,6 +446,16 @@ export default function App() {
         }}
         companies={companies}
         mailboxes={mailboxes}
+      />
+
+      {/* Interactive Slack Sandbox Modal */}
+      <SlackSandboxModal
+        isOpen={isSlackSandboxOpen}
+        onClose={() => setIsSlackSandboxOpen(false)}
+        mailboxes={mailboxes}
+        emails={emails}
+        onOpenWebmail={handleOpenWebmailForEmail}
+        onGenerateSlackOtp={handleGenerateSlackOtp}
       />
     </div>
   );

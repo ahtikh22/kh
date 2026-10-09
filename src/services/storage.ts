@@ -18,6 +18,17 @@ export const ADMIN_CREDENTIALS = {
 
 const INITIAL_COMPANIES: Company[] = [
   {
+    id: 'comp-axxon',
+    name: 'Axxon BPO Solutions',
+    domain: 'axxonbpo.com',
+    accessKey: 'AXXON-7719-B2',
+    contactEmail: 'admin@axxonbpo.com',
+    maxAccounts: 100,
+    allowedServices: ['slack', 'outlook', 'zoom', 'teams'],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
+    status: 'active',
+  },
+  {
     id: 'comp-1',
     name: 'Apex Global Corp',
     domain: 'apexcorp.com',
@@ -53,6 +64,26 @@ const INITIAL_COMPANIES: Company[] = [
 ];
 
 const INITIAL_MAILBOXES: Mailbox[] = [
+  {
+    id: 'box-axxon-1',
+    email: 'ahtisham12@axxonbpo.com',
+    username: 'ahtisham12',
+    domain: 'axxonbpo.com',
+    password: 'ahti@001',
+    displayName: 'Ahtisham Khan (Axxon BPO)',
+    companyId: 'comp-axxon',
+    companyName: 'Axxon BPO Solutions',
+    quotaMb: 25000,
+    usedMb: 50,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    allowedServices: ['slack', 'outlook', 'zoom', 'teams'],
+    appPasswords: [
+      { id: 'ap-axxon-slack', service: 'slack', name: 'Slack Enterprise Token', code: 'xoxp-axxon-7719-live', createdAt: new Date().toISOString() },
+      { id: 'ap-axxon-outlook', service: 'outlook', name: 'Outlook 365 Exchange Token', code: 'ms-axxon-auth-key', createdAt: new Date().toISOString() },
+    ],
+    notes: 'Primary corporate identity for Slack, Outlook, Zoom, Teams',
+  },
   {
     id: 'box-1',
     email: 'alex@apexcorp.com',
