@@ -10,6 +10,7 @@ import { CreateCompanyModal } from './components/AdminPanel/CreateCompanyModal';
 import { CompanyDashboard } from './components/CompanyPortal/CompanyDashboard';
 import { WebmailView } from './components/Webmail/WebmailView';
 import { LoginModal } from './components/LoginModal';
+import { FullPageAuth } from './components/FullPageAuth';
 import { SlackSandboxModal } from './components/SlackSandboxModal';
 import { StorageService, ADMIN_CREDENTIALS } from './services/storage';
 import { AppViewMode, Company, Mailbox, EmailMessage, ActivityLog, ServiceType } from './types';
@@ -42,15 +43,24 @@ export default function App() {
     mailboxes.length > 0 ? mailboxes[0].email : ''
   );
 
-  // User session: Default to logged in as Ahti Superadmin
+  // Authentication session state: Checked from storage
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const session = StorageService.getSession();
+    return !!session;
+  });
+
   const [currentUser, setCurrentUser] = useState<{
     email: string;
     role: 'admin' | 'company' | 'mailbox';
     name: string;
-  }>({
-    email: ADMIN_CREDENTIALS.email,
-    role: 'admin',
-    name: 'Ahti Superadmin',
+  }>(() => {
+    const session = StorageService.getSession();
+    if (session) return session;
+    return {
+      email: ADMIN_CREDENTIALS.email,
+      role: 'admin',
+      name: 'Ahti Superadmin',
+    };
   });
 
   // Modals state
@@ -59,6 +69,8 @@ export default function App() {
   const [isCreateCompanyOpen, setIsCreateCompanyOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSlackSandboxOpen, setIsSlackSandboxOpen] = useState(false);
+  const [slackSandboxInitialEmail, setSlackSandboxInitialEmail] = useState('ahtisham12@axxonbpo.com');
+  const [slackSandboxInitialOtp, setSlackSandboxInitialOtp] = useState('');
   const [simulatorEmailTarget, setSimulatorEmailTarget] = useState<string>('');
 
   // Toast banner for feedback
@@ -182,6 +194,118 @@ export default function App() {
     setCurrentMode('admin');
   };
 
+  const handleAdminLogin = () => {
+    const user = {
+      email: ADMIN_CREDENTIALS.email,
+      role: 'admin' as const,
+      name: 'Ahti Superadmin',
+    };
+    StorageService.saveSession(user);
+    setCurrentUser(user);
+    setCurrentMode('admin');
+    setIsAuthenticated(true);
+    setIsLoginModalOpen(false);
+    showToast(`Logged into Admin Control Panel (${ADMIN_CREDENTIALS.email})`);
+  };
+
+  const handleCompanyLogin = (companyId: string) => {
+    setSelectedCompanyId(companyId);
+    const c = companies.find((x) => x.id === companyId);
+    const user = {
+      email: c ? c.contactEmail : 'company@client.com',
+      role: 'company' as const,
+      name: c ? c.name : 'Company Client',
+    };
+    StorageService.saveSession(user);
+    setCurrentUser(user);
+    setCurrentMode('company_portal');
+    setIsAuthenticated(true);
+    setIsLoginModalOpen(false);
+    showToast(`Logged into ${c?.name} Company Portal`);
+  };
+
+  const handleMailboxLogin = (email: string) => {
+    setActiveMailboxEmail(email);
+    const m = mailboxes.find((x) => x.email.toLowerCase() === email.toLowerCase());
+    const user = {
+      email,
+      role: 'mailbox' as const,
+      name: m ? m.displayName : 'Webmail User',
+    };
+    StorageService.saveSession(user);
+    setCurrentUser(user);
+    setCurrentMode('webmail');
+    setIsAuthenticated(true);
+    setIsLoginModalOpen(false);
+    showToast(`Logged into Webmail for ${email}`);
+  };
+
+  const handleSignUp = (data: {
+    fullName: string;
+    username: string;
+    companyName: string;
+    domain: string;
+    password: string;
+    services: ServiceType[];
+  }) => {
+    const newComp = StorageService.createCompany({
+      name: data.companyName,
+      domain: data.domain,
+      contactEmail: `${data.username}@${data.domain}`,
+      maxAccounts: 20,
+      allowedServices: data.services,
+    });
+    const newMailbox = StorageService.createMailbox({
+      username: data.username,
+      domain: data.domain,
+      password: data.password,
+      displayName: data.fullName,
+      companyId: newComp.id,
+      allowedServices: data.services,
+      quotaMb: 5000,
+    });
+    refreshAllState();
+    const user = {
+      email: newMailbox.email,
+      role: 'mailbox' as const,
+      name: newMailbox.displayName,
+    };
+    StorageService.saveSession(user);
+    setCurrentUser(user);
+    setActiveMailboxEmail(newMailbox.email);
+    setSelectedCompanyId(newComp.id);
+    setCurrentMode('webmail');
+    setIsAuthenticated(true);
+    showToast(`Account created & logged in: ${newMailbox.email}`);
+  };
+
+  const handleLogout = () => {
+    StorageService.clearSession();
+    setIsAuthenticated(false);
+    showToast('Logged out successfully. Please sign in again.');
+  };
+
+  const handleOpenSlackWithOtp = (email: string, otp: string) => {
+    setSlackSandboxInitialEmail(email);
+    setSlackSandboxInitialOtp(otp);
+    setIsSlackSandboxOpen(true);
+    showToast(`Opening Slack Workspace for ${email} with OTP ${otp}...`);
+  };
+
+  // If user is not authenticated, show the Full Page Login & Sign-in/Sign-up Gate
+  if (!isAuthenticated) {
+    return (
+      <FullPageAuth
+        companies={companies}
+        mailboxes={mailboxes}
+        onAdminLogin={handleAdminLogin}
+        onCompanyLogin={handleCompanyLogin}
+        onMailboxLogin={handleMailboxLogin}
+        onSignUp={handleSignUp}
+      />
+    );
+  }
+
   // Selected company object
   const currentCompany =
     companies.find((c) => c.id === selectedCompanyId) ||
@@ -234,7 +358,7 @@ export default function App() {
           setCurrentMode('admin');
         }}
         onOpenSlackSandbox={() => setIsSlackSandboxOpen(true)}
-        onLogout={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Toast Notification */}
@@ -381,6 +505,7 @@ export default function App() {
             onToggleStar={handleToggleStar}
             onMarkRead={handleMarkRead}
             onDeleteEmail={handleDeleteEmail}
+            onOpenSlackWithOtp={handleOpenSlackWithOtp}
           />
         )}
       </main>
@@ -456,6 +581,8 @@ export default function App() {
         emails={emails}
         onOpenWebmail={handleOpenWebmailForEmail}
         onGenerateSlackOtp={handleGenerateSlackOtp}
+        initialEmail={slackSandboxInitialEmail}
+        initialOtp={slackSandboxInitialOtp}
       />
     </div>
   );

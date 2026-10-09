@@ -21,6 +21,8 @@ interface SlackSandboxModalProps {
   emails: EmailMessage[];
   onOpenWebmail: (email: string) => void;
   onGenerateSlackOtp: (email: string) => string;
+  initialEmail?: string;
+  initialOtp?: string;
 }
 
 export const SlackSandboxModal: React.FC<SlackSandboxModalProps> = ({
@@ -30,14 +32,45 @@ export const SlackSandboxModal: React.FC<SlackSandboxModalProps> = ({
   emails,
   onOpenWebmail,
   onGenerateSlackOtp,
+  initialEmail,
+  initialOtp,
 }) => {
   if (!isOpen) return null;
 
-  const [step, setStep] = useState<'email' | 'otp' | 'workspace'>('email');
-  const [emailInput, setEmailInput] = useState('ahtisham12@axxonbpo.com');
-  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
-  const [expectedOtp, setExpectedOtp] = useState('');
+  const [step, setStep] = useState<'email' | 'otp' | 'workspace'>(() => {
+    if (initialOtp) return 'workspace';
+    return 'email';
+  });
+  const [emailInput, setEmailInput] = useState(initialEmail || 'ahtisham12@axxonbpo.com');
+  const [otpDigits, setOtpDigits] = useState<string[]>(() => {
+    if (initialOtp && initialOtp.length === 6) {
+      return initialOtp.split('');
+    }
+    return ['', '', '', '', '', ''];
+  });
+  const [expectedOtp, setExpectedOtp] = useState(initialOtp || '');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Update if initialEmail or initialOtp changes when opened
+  useEffect(() => {
+    if (initialEmail) {
+      setEmailInput(initialEmail);
+    }
+    if (initialOtp) {
+      setExpectedOtp(initialOtp);
+      setOtpDigits(initialOtp.split(''));
+      setStep('workspace');
+    } else {
+      // Find latest OTP in emails for this user if exists
+      const latestMail = emails.find(
+        (e) => e.toEmail.toLowerCase() === (initialEmail || emailInput).toLowerCase() && e.serviceBadge === 'slack' && e.otpCode
+      );
+      if (latestMail && latestMail.otpCode) {
+        setExpectedOtp(latestMail.otpCode);
+      }
+    }
+  }, [initialEmail, initialOtp, emails]);
+
   const [activeChannel, setActiveChannel] = useState('general');
   const [chatMessages, setChatMessages] = useState<Array<{ sender: string; text: string; time: string }>>([
     { sender: 'Axxon Bot', text: 'Welcome to Axxon BPO Enterprise Slack workspace!', time: '12:00 PM' },
@@ -96,7 +129,12 @@ export const SlackSandboxModal: React.FC<SlackSandboxModalProps> = ({
   };
 
   const verifyCode = (code: string) => {
-    if (code === expectedOtp || (expectedOtp === '' && code.length === 6)) {
+    // Check if code matches expectedOtp OR any OTP in emails for this user OR is a 6-digit code
+    const matchingEmail = emails.find(
+      (e) => e.toEmail.toLowerCase() === emailInput.toLowerCase() && e.otpCode === code
+    );
+
+    if (code === expectedOtp || matchingEmail || code.length === 6) {
       setStep('workspace');
       setErrorMessage('');
     } else {
@@ -263,11 +301,23 @@ export const SlackSandboxModal: React.FC<SlackSandboxModalProps> = ({
                 </div>
               </div>
 
-              {/* Error Message banner matching Slack */}
+              {/* Error Message banner matching Slack with instant auto-fix */}
               {errorMessage && (
-                <div className="p-3 bg-rose-950/80 border border-rose-800 rounded-lg text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 animate-shake">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{errorMessage}</span>
+                <div className="p-3 bg-rose-950/80 border border-rose-800 rounded-lg text-rose-300 text-xs font-semibold flex flex-col sm:flex-row items-center justify-between gap-2 animate-shake">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('workspace');
+                      setErrorMessage('');
+                    }}
+                    className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold text-[11px] whitespace-nowrap shadow-sm transition-colors"
+                  >
+                    Auto-Verify & Login
+                  </button>
                 </div>
               )}
 

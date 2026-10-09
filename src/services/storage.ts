@@ -164,6 +164,38 @@ const INITIAL_MAILBOXES: Mailbox[] = [
 
 const INITIAL_EMAILS: EmailMessage[] = [
   {
+    id: 'mail-axxon-slack-1',
+    toEmail: 'ahtisham12@axxonbpo.com',
+    fromEmail: 'no-reply@slack.com',
+    fromName: 'Slack Enterprise Support',
+    subject: 'Slack verification code: 719240',
+    preview: 'Your Slack 6-digit verification code is 719-240. Enter this code to verify your Axxon BPO workspace account.',
+    bodyHtml: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 580px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <div style="width: 24px; height: 24px; background: #4a154b; border-radius: 4px; display: inline-block;"></div>
+          <strong style="color: #4a154b; font-size: 18px;">Axxon BPO Slack Workspace</strong>
+        </div>
+        <p>Hello Ahtisham Khan,</p>
+        <p>We received your request to confirm <strong>ahtisham12@axxonbpo.com</strong> and connect your corporate messaging account on Slack.</p>
+        <div style="margin: 24px 0; padding: 20px; background-color: #f8fafc; border: 2px dashed #4a154b; border-radius: 8px; text-align: center;">
+          <span style="font-size: 13px; color: #64748b; display: block; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Your 6-Digit Slack Passcode</span>
+          <span style="font-size: 36px; font-weight: 800; letter-spacing: 6px; color: #4a154b; font-family: monospace;">719240</span>
+        </div>
+        <p>Use this passcode in your Slack login prompt to start chatting in channels and direct messaging.</p>
+        <div style="margin-top: 20px; padding: 12px; background: #faf5ff; border: 1px solid #d8b4fe; border-radius: 6px; font-size: 12px; color: #581c87;">
+          <strong>Quick Action:</strong> Click the "Open Slack Workspace" button in your Webmail toolbar to instantly authenticate with this code without any error.
+        </div>
+      </div>
+    `,
+    date: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+    isRead: false,
+    isStarred: true,
+    folder: 'inbox',
+    serviceBadge: 'slack',
+    otpCode: '719240',
+  },
+  {
     id: 'mail-1',
     toEmail: 'alex@apexcorp.com',
     fromEmail: 'no-reply@slack.com',
@@ -798,10 +830,37 @@ export const StorageService = {
     }
   },
 
+  getSession(): { email: string; role: 'admin' | 'company' | 'mailbox'; name: string } | null {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.SESSION);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  },
+
+  saveSession(session: { email: string; role: 'admin' | 'company' | 'mailbox'; name: string }): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+    } catch (e) {
+      console.warn(e);
+    }
+  },
+
+  clearSession(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.SESSION);
+    } catch (e) {
+      console.warn(e);
+    }
+  },
+
   resetAllData(): void {
     localStorage.removeItem(STORAGE_KEYS.MAILBOXES);
     localStorage.removeItem(STORAGE_KEYS.COMPANIES);
     localStorage.removeItem(STORAGE_KEYS.EMAILS);
     localStorage.removeItem(STORAGE_KEYS.LOGS);
+    localStorage.removeItem(STORAGE_KEYS.SESSION);
   },
 };

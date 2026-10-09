@@ -35,6 +35,7 @@ interface WebmailViewProps {
   onToggleStar: (emailId: string) => void;
   onMarkRead: (emailId: string, isRead: boolean) => void;
   onDeleteEmail: (emailId: string) => void;
+  onOpenSlackWithOtp?: (email: string, otp: string) => void;
 }
 
 type FolderType = 'inbox' | 'sent' | 'starred' | 'trash';
@@ -49,6 +50,7 @@ export const WebmailView: React.FC<WebmailViewProps> = ({
   onToggleStar,
   onMarkRead,
   onDeleteEmail,
+  onOpenSlackWithOtp,
 }) => {
   const [currentFolder, setCurrentFolder] = useState<FolderType>('inbox');
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
@@ -480,6 +482,17 @@ export const WebmailView: React.FC<WebmailViewProps> = ({
                       )}
                       <span>{copiedOtp === selectedEmail.otpCode ? 'Copied' : 'Copy'}</span>
                     </button>
+
+                    {selectedEmail.serviceBadge === 'slack' && onOpenSlackWithOtp && (
+                      <button
+                        onClick={() => onOpenSlackWithOtp(selectedEmail.toEmail, selectedEmail.otpCode!)}
+                        className="px-3 py-2 bg-[#4A154B] hover:bg-[#611f69] text-white rounded transition-colors flex items-center gap-1.5 text-xs font-bold whitespace-nowrap shadow-md border border-purple-400/30"
+                        title="Open Slack and sign in automatically with this code"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Sign In to Slack</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
